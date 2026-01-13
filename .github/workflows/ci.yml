@@ -61,26 +61,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Fix Workspace Permissions
+        run: sudo chown -R 1000:1000 .
+
       - name: Pull and Run Docker Image
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
-          docker run -d -p 8086:8081 --name my-app ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
-          sleep 40 
+          docker run -d -p 8086:8086 --name my-app ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
+          
+          # Wait for the app to respond to a health check (up to 60s)
+          echo "Waiting for app to start..."
+          timeout 60s bash -c 'until curl -s http://localhost:8086/actuator/health; do sleep 5; done'
+          echo "App is UP!"
 
       - name: ZAP Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://localhost:8086/api/v1/environment/readings'
-          artifact_name: 'zap-report-internal' 
-          allow_issue_writing: false 
+          target: 'http://127.0.0.1:8086/api/v1/environment/readings'
+          rules_file_name: '.zap/rules.tsv'
+          allow_issue_writing: false
           fail_action: false 
 
       - name: Upload DAST Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: final-dast-report
+          name: zap-report
           path: |
             report_html.html
             zap_report.html
