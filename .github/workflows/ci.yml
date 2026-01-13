@@ -64,21 +64,23 @@ jobs:
       - name: Pull and Run Docker Image
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
-          docker run -d -p 8086:8086 --name my-app ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
-          sleep 30
+          docker run -d -p 8086:8081 --name my-app ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
+          sleep 40 
 
       - name: ZAP Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8086/api/v1/environment/readings'
-          rules_file_name: '.zap/rules.tsv'
+          artifact_name: 'zap-report-internal' 
           allow_issue_writing: false 
           fail_action: false 
 
-      - name: Upload ZAP Report
+      - name: Upload DAST Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zapreport
-          path: zap_report.html
+          name: final-dast-report
+          path: |
+            report_html.html
+            zap_report.html
