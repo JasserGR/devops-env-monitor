@@ -69,7 +69,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8086/api/v1/environment/readings'
           rules_file_name: '.zap/rules.tsv'
-          fail_action: false # Keep as false so the pipeline doesn't break on minor warnings
+          create_issue: false 
+          fail_action: false 
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
