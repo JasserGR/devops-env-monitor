@@ -73,12 +73,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8086/api/v1/environment/readings'
           rules_file_name: '.zap/rules.tsv'
-          create_issue: false 
+          allow_issue_writing: false 
           fail_action: false 
 
       - name: Upload ZAP Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap-scan-report
+          name: zapreport
           path: zap_report.html
