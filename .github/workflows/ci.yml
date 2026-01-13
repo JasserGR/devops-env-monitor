@@ -83,16 +83,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:8086/api/v1/environment/readings'
           rules_file_name: '.zap/rules.tsv'
-          allow_issue_writing: false
           fail_action: false
-          cmd_options: '-I'
-
-      - name: Upload DAST Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-dast-report
-          path: |
-            report_html.html
-            report_md.md
-            report_json.json
