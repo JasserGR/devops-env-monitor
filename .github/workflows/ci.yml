@@ -76,14 +76,18 @@ jobs:
           touch .zap/rules.tsv
           chmod -R 777 .
 
-      - name: ZAP Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://localhost:8086/api/v1/environment/readings'
-          rules_file_name: '.zap/rules.tsv'
-          fail_action: false
-          artifact_name: 'zap-scan-${{ github.run_id }}'
+      - name: Run ZAP Baseline Scan
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run -v ${{ github.workspace }}:/zap/wrk/:rw \
+            --network=host \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://localhost:8086/api/v1/environment/readings \
+            -J report_json.json \
+            -w report_md.md \
+            -r report_html.html \
+            || true
 
       - name: Upload ZAP Reports
         uses: actions/upload-artifact@v4
