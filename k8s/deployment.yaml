@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: env-monitor
+  labels:
+    app: env-monitor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: env-monitor
+  template:
+    metadata:
+      labels:
+        app: env-monitor
+    spec:
+      containers:
+        - name: env-monitor
+          image: jasgr/env-monitor:latest
+          ports:
+            - containerPort: 8086
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
