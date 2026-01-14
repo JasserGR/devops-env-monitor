@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnvMonitorApplication.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">env-monitor</a> &gt; <a href="index.source.html" class="el_package">com.devops.project.envmonitor</a> &gt; <span class="el_source">EnvMonitorApplication.java</span></div><h1>EnvMonitorApplication.java</h1><pre class="source lang-java linenums">package com.devops.project.envmonitor;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+@SpringBootApplication
+@RestController
+@RequestMapping(&quot;/api/v1/environment&quot;)
+public class EnvMonitorApplication {
+
+<span class="fc" id="L22">    private static final Logger log = LoggerFactory.getLogger(EnvMonitorApplication.class);</span>
+<span class="fc" id="L23">    private final Map&lt;String, SensorReading&gt; readings = new ConcurrentHashMap&lt;&gt;();</span>
+    private final Counter extremeTempCounter;
+
+<span class="fc" id="L26">    public EnvMonitorApplication(MeterRegistry registry) {</span>
+        // Custom Metric: Counts how many times extreme weather is reported
+<span class="fc" id="L28">        this.extremeTempCounter = Counter.builder(&quot;env.sensor.extreme.alerts&quot;)</span>
+<span class="fc" id="L29">                .description(&quot;Counts extreme temperature detections&quot;)</span>
+<span class="fc" id="L30">                .register(registry);</span>
+<span class="fc" id="L31">    }</span>
+
+    public static void main(String[] args) {
+<span class="nc" id="L34">        SpringApplication.run(EnvMonitorApplication.class, args);</span>
+<span class="nc" id="L35">    }</span>
+
+    @PostMapping(&quot;/readings&quot;)
+    public ResponseEntity&lt;String&gt; updateReading(@Valid @RequestBody SensorReading reading) {
+<span class="fc" id="L39">        log.info(&quot;Update received for zone: {}&quot;, reading.getZoneId()); // This will now be JSON</span>
+
+<span class="pc bpc" id="L41" title="1 of 4 branches missed.">        if (reading.getTemperature() &gt; 40 || reading.getTemperature() &lt; -10) {</span>
+<span class="fc" id="L42">            extremeTempCounter.increment();</span>
+<span class="fc" id="L43">            log.warn(&quot;EXTREME_TEMP_ALERT in zone: {}&quot;, reading.getZoneId());</span>
+        }
+
+<span class="fc" id="L46">        readings.put(reading.getZoneId(), reading);</span>
+<span class="fc" id="L47">        return ResponseEntity.ok(&quot;Data synchronized&quot;);</span>
+    }
+
+    @GetMapping(&quot;/readings&quot;)
+    public Collection&lt;SensorReading&gt; getAll() {
+<span class="fc" id="L52">        log.info(&quot;Fetching all environment readings&quot;);</span>
+<span class="fc" id="L53">        return readings.values(); }</span>
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleValidation(Exception e) {
+<span class="fc" id="L57">        return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;Invalid sensor data provided&quot;, &quot;status&quot;, &quot;400&quot;));</span>
+    }
+}
+
+<span class="pc bnc" id="L61" title="All 18 branches missed.">@Data @NoArgsConstructor @AllArgsConstructor</span>
+class SensorReading {
+<span class="fc" id="L63">    @NotBlank String zoneId;</span>
+<span class="fc" id="L64">    @Min(-50) @Max(60) double temperature;</span>
+<span class="fc" id="L65">    @Min(0) @Max(100) double humidity;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
