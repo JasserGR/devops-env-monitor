@@ -49,7 +49,6 @@ jobs:
           context: .
           push: true 
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/env-monitor:latest
-
   dast-scan:
     runs-on: ubuntu-latest
     needs: build-and-scan
@@ -75,7 +74,7 @@ jobs:
         run: |
           mkdir -p .zap
           touch .zap/rules.tsv
-          sudo chmod -R 777 .
+          chmod -R 777 .
 
       - name: ZAP Scan
         uses: zaproxy/action-baseline@v0.12.0
@@ -84,3 +83,13 @@ jobs:
           target: 'http://localhost:8086/api/v1/environment/readings'
           rules_file_name: '.zap/rules.tsv'
           fail_action: false
+          artifact_name: ''   # disables broken artifact upload
+
+      - name: Upload ZAP Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-reports
+          path: |
+            report_json.json
+            report_md.md
+            report_html.html
