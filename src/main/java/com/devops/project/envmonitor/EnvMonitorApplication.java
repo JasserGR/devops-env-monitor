@@ -48,7 +48,9 @@ public class EnvMonitorApplication {
     }
 
     @GetMapping("/readings")
-    public Collection<SensorReading> getAll() { return readings.values(); }
+    public Collection<SensorReading> getAll() {
+        log.info("Fetching all environment readings");
+        return readings.values(); }
 
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(Exception e) {
